@@ -360,12 +360,13 @@ class Database:
             conn = self.get_connection()
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT AVG(CAST(score AS FLOAT) / max_score * 100) as avg_score
+                SELECT AVG(CAST(score AS FLOAT)) as avg_score
                 FROM quiz_attempts WHERE user_id = ?
             """, (user_id,))
             row = cursor.fetchone()
             conn.close()
-            return row["avg_score"] or 0
+            avg_score = row["avg_score"] if row and row["avg_score"] is not None else 0
+            return round(float(avg_score), 2)
         except Exception as e:
             logger.error(f"Error getting average score: {e}")
             return 0

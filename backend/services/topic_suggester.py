@@ -1,5 +1,5 @@
 """
-Topic Suggester Service using Google Gemini API
+Topic Suggester Service using GPT-4o API
 Suggests financial topics based on user age and PDF content from educational materials
 """
 
@@ -7,27 +7,53 @@ import logging
 import os
 import json
 from typing import List, Dict, Any
-import google.generativeai as genai
+
+try:
+    from openai import AzureOpenAI
+    AZURE_OPENAI_AVAILABLE = True
+except ImportError:
+    AZURE_OPENAI_AVAILABLE = False
+
 from .pdf_content_extractor import PDFContentExtractor
 
 logger = logging.getLogger(__name__)
 
-# Configure Gemini API
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+# Configure Azure OpenAI (GPT-4o) as PRIMARY LLM
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT", "")
+AZURE_DEPLOYMENT_NAME = os.getenv("AZURE_DEPLOYMENT_NAME", "gpt-4o")
 
 
 class TopicSuggester:
-    """Suggests topics based on PDF content and user age using Gemini 2.5 Flash"""
+    """Suggests topics based on PDF content and user age using GPT-4o"""
     
     def __init__(self):
-        """Initialize Gemini client and PDF extractor"""
-        if GEMINI_API_KEY:
-            genai.configure(api_key=GEMINI_API_KEY)
-            self.model = genai.GenerativeModel("gemini-2.5-flash")
-            logger.info("✅ Gemini API initialized")
+        """Initialize GPT-4o client and PDF extractor"""
+        self.model = None
+        if OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_AVAILABLE:
+            try:
+                self.model = AzureOpenAI(
+                    api_key=OPENAI_API_KEY,
+                    api_version="2024-02-15-preview",
+                    azure_endpoint=AZURE_OPENAI_ENDPOINT
+                )
+                logger.info("✅ Azure OpenAI (GPT-4o) initialized for topic suggestion")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Azure OpenAI: {e}")
+                self.model = None
         else:
-            self.model = None
-            logger.warning("⚠️  GEMINI_API_KEY not set. Using PDF topics only.")
+            missing_vars = []
+            if not OPENAI_API_KEY:
+                missing_vars.append("OPENAI_API_KEY")
+            if not AZURE_OPENAI_ENDPOINT:
+                missing_vars.append("AZURE_OPENAI_ENDPOINT")
+            if not AZURE_OPENAI_AVAILABLE:
+                missing_vars.append("openai library")
+            
+            vars_str = ", ".join(missing_vars) if missing_vars else "unknown"
+            logger.warning(f"⚠️  Azure OpenAI (GPT-4o) not available. Missing: {vars_str}")
+            logger.warning(f"📖 See AZURE_OPENAI_SETUP.md for configuration instructions")
+            logger.info("ℹ️  Will use PDF-based topic extraction")
         
         # Initialize PDF content extractor
         self.pdf_extractor = PDFContentExtractor()
@@ -162,9 +188,9 @@ class TopicSuggester:
         else:
             return f"🏆 Perfect score! You scored {percentage:.0f}%! You're a financial wizard! Bringing you the hardest questions next!"
     
-    def analyze_performance_with_gemini(self, quiz_history: List[Dict[str, Any]], current_percentage: float, max_score: int, next_difficulty: str = "medium") -> Dict[str, Any]:
+    def analyze_performance_with_gpt4o(self, quiz_history: List[Dict[str, Any]], current_percentage: float, max_score: int, next_difficulty: str = "medium") -> Dict[str, Any]:
         """
-        Analyze user performance using Gemini to provide detailed insights
+        Analyze user performance using GPT-4o to provide detailed insights
         
         Args:
             quiz_history: List of previous quiz attempts with topic and percentage
@@ -210,10 +236,17 @@ Provide ONLY a JSON response (no markdown, just valid JSON):
 
 Be specific, encouraging, and constructive. Keep it short and motivating."""
             
-            response = self.model.generate_content(prompt)
+            response = self.model.chat.completions.create(
+                model=AZURE_DEPLOYMENT_NAME,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=500
+            )
             
             # Parse JSON response
-            response_text = response.text.strip()
+            response_text = response.choices[0].message.content.strip()
             result = json.loads(response_text)
             
             return {
@@ -224,7 +257,7 @@ Be specific, encouraging, and constructive. Keep it short and motivating."""
                 "percentage": current_percentage
             }
         except Exception as e:
-            logger.error(f"Error analyzing performance with Gemini: {e}")
+            logger.error(f"Error analyzing performance with GPT-4o: {e}")
             return {
                 "success": False,
                 "next_difficulty": next_difficulty,
@@ -234,7 +267,7 @@ Be specific, encouraging, and constructive. Keep it short and motivating."""
             }
     
     def _get_default_analysis(self, current_score: int, max_score: int) -> Dict[str, Any]:
-        """Fallback analysis when Gemini is not available"""
+        """Fallback analysis when GPT-4o is not available"""
         percentage = (current_score / max_score * 100) if max_score > 0 else 0
         return {
             "next_difficulty": self.get_difficulty_recommendation(current_score, max_score),

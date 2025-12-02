@@ -39,6 +39,11 @@ env/
 *.sqlite
 *.sqlite3
 
+# Environment variables
+.env
+.env.local
+.env.*.local
+
 # Embeddings and data
 data/pdfs/*
 data/text/*

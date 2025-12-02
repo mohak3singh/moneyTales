@@ -33,7 +33,7 @@ def setup_submit_router(orchestrator, database, topic_suggester=None):
         
         Flow:
         1. EvaluatorAgent grades the quiz
-        2. Analyze performance history using Gemini
+        2. Analyze performance history using GPT-4o
         3. GamificationAgent calculates rewards
         4. Store responses and calculate next difficulty
         5. Database updated with score, points, badges
@@ -72,7 +72,7 @@ def setup_submit_router(orchestrator, database, topic_suggester=None):
                 feedback = f"💪 Nice try! You scored {percentage:.0f}%. Let's strengthen the basics!"
                 insight = "Don't worry, practice makes perfect. Start with easier questions to build your foundation!"
             
-            # Try to enhance with Gemini if available
+            # Try to enhance with GPT-4o if available
             if topic_suggester:
                 try:
                     quiz_history = database.get_user_quiz_history(submission.user_id, limit=10)
@@ -87,8 +87,8 @@ def setup_submit_router(orchestrator, database, topic_suggester=None):
                         except:
                             pass
                     
-                    # Get personalized analysis from Gemini
-                    analysis = topic_suggester.analyze_performance_with_gemini(
+                    # Get personalized analysis from GPT-4o
+                    analysis = topic_suggester.analyze_performance_with_gpt4o(
                         history_list, percentage, max_score, next_difficulty
                     )
                     if analysis.get("success"):
@@ -96,7 +96,7 @@ def setup_submit_router(orchestrator, database, topic_suggester=None):
                         feedback = analysis.get("feedback", feedback)
                         insight = analysis.get("insight", insight)
                 except Exception as e:
-                    logger.warning(f"Could not enhance feedback with Gemini: {e}")
+                    logger.warning(f"Could not enhance feedback with GPT-4o: {e}")
             
             # Store responses
             responses_json = json.dumps({

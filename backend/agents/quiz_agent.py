@@ -1,7 +1,7 @@
 """
 Quiz Agent V3 - PDF-Based Question Generation
 Generates quiz questions from educational PDF content
-Uses PDF topics and content combined with Gemini for personalization
+Uses PDF topics and content combined with GPT-4o for personalization
 """
 
 import logging
@@ -11,18 +11,6 @@ from typing import Dict, List, Any
 from .base_agent import Agent
 
 logger = logging.getLogger(__name__)
-
-# Try to import Gemini
-try:
-    import google.generativeai as genai
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-    if GEMINI_API_KEY:
-        genai.configure(api_key=GEMINI_API_KEY)
-        GEMINI_AVAILABLE = True
-    else:
-        GEMINI_AVAILABLE = False
-except:
-    GEMINI_AVAILABLE = False
 
 # Import PDF-based question generator
 try:
@@ -45,6 +33,9 @@ class QuizAgent(Agent):
         else:
             self.pdf_generator = None
             logger.warning("⚠️  PDF generator not available")
+        
+        # Cache for generated questions (topic -> questions)
+        self.question_cache = {}
 
     def execute(self, **kwargs) -> Dict[str, Any]:
         """
@@ -79,6 +70,23 @@ class QuizAgent(Agent):
                 "personalized": True
             })
 
+            # Check cache first (for same topic and difficulty)
+            cache_key = f"{topic}_{user_age}_{difficulty}"
+            if cache_key in self.question_cache:
+                logger.info(f"✅ Using cached questions for topic: {topic} (difficulty: {difficulty})")
+                cached_questions = self.question_cache[cache_key]
+                if len(cached_questions) >= num_questions:
+                    return {
+                        "status": "success",
+                        "questions": cached_questions[:num_questions],
+                        "topic": topic,
+                        "difficulty": difficulty,
+                        "total_questions": num_questions,
+                        "personalized": True,
+                        "source": "Cache",
+                        "agent": self.name
+                    }
+
             # Get questions user has already answered correctly
             correctly_answered = []
             if database and user_id:
@@ -94,14 +102,18 @@ class QuizAgent(Agent):
                         age=user_age,
                         topic=topic,
                         num_questions=num_questions,
-                        user_hobbies=user_hobbies
+                        user_hobbies=user_hobbies,
+                        difficulty=difficulty
                     )
                     
                     if questions and len(questions) > 0:
+                        # Cache the generated questions
+                        self.question_cache[cache_key] = questions
+                        
                         # Filter out questions user has already answered correctly
                         questions = self._filter_answered_questions(questions, correctly_answered)
                         
-                        logger.info(f"Generated {len(questions)} questions from PDF for topic: {topic}")
+                        logger.info(f"Generated {len(questions)} questions from GPT-4o for topic: {topic}")
                         return {
                             "status": "success",
                             "questions": questions,
@@ -109,33 +121,13 @@ class QuizAgent(Agent):
                             "difficulty": difficulty,
                             "total_questions": len(questions),
                             "personalized": True,
-                            "source": "PDF",
+                            "source": "GPT-4o",
                             "agent": self.name
                         }
                 except Exception as e:
-                    logger.warning(f"PDF generation failed: {e}, trying fallback")
+                    logger.warning(f"GPT-4o generation failed: {e}, using fallback template method")
             
-            # Step 2: Fallback to Gemini-based generation
-            if GEMINI_AVAILABLE:
-                try:
-                    questions = self._generate_with_gemini(
-                        topic, difficulty, num_questions, user_profile, correctly_answered
-                    )
-                    logger.info(f"Generated {len(questions)} personalized questions with Gemini (fallback)")
-                    return {
-                        "status": "success",
-                        "questions": questions,
-                        "topic": topic,
-                        "difficulty": difficulty,
-                        "total_questions": len(questions),
-                        "personalized": True,
-                        "source": "Gemini",
-                        "agent": self.name
-                    }
-                except Exception as e:
-                    logger.warning(f"Gemini generation failed: {e}, using templates")
-            
-            # Step 3: Final fallback to template-based questions
+            # Step 2: Final fallback to template-based questions
             questions = self._generate_from_templates(
                 topic, difficulty, num_questions, user_profile, correctly_answered
             )
@@ -186,146 +178,6 @@ class QuizAgent(Agent):
                 filtered.append(q)
         
         return filtered if filtered else questions
-
-    def _generate_with_gemini(
-        self, topic: str, difficulty: str, num_questions: int, user_profile: dict,
-        correctly_answered: List[Dict[str, Any]] = None
-    ) -> List[Dict[str, Any]]:
-        """
-        Generate personalized questions using Gemini 2.5 Flash
-        
-        Personalization factors:
-        - User age and hobbies for context
-        - Previous quiz history and scores
-        - Current difficulty level
-        - Topic focus
-        - Questions user has already mastered (correctly answered)
-        """
-        try:
-            model = genai.GenerativeModel("gemini-2.5-flash")
-            
-            # Extract user information
-            user_name = user_profile.get("name", "Student")
-            user_age = user_profile.get("age", 10)
-            hobbies = user_profile.get("hobbies", "learning")
-            quiz_history = user_profile.get("quiz_history", [])
-            
-            # Build context from quiz history
-            history_context = ""
-            if quiz_history:
-                # Get topics they've studied
-                studied_topics = list(set([q.get("topic", "") for q in quiz_history[-10:]]))
-                avg_score = sum(q.get("percentage", 0) for q in quiz_history) / len(quiz_history) if quiz_history else 0
-                weak_areas = [q.get("topic", "") for q in quiz_history if q.get("percentage", 0) < 60]
-                
-                history_context = f"""
-Previous Learning History:
-- Topics studied: {', '.join(studied_topics) if studied_topics else 'None yet'}
-- Average score: {avg_score:.0f}%
-- Areas needing improvement: {', '.join(set(weak_areas)) if weak_areas else 'None'}
-- Number of quizzes completed: {len(quiz_history)}
-"""
-            
-            # Build context of questions they've already mastered
-            mastered_context = ""
-            if correctly_answered:
-                mastered_topics = list(set([q.get("topic", "") for q in correctly_answered]))
-                mastered_context = f"""
-
-IMPORTANT - Questions User Has Mastered:
-- User has already correctly answered questions on: {', '.join(mastered_topics) if mastered_topics else 'None'}
-- Generate NEW, DIFFERENT questions they haven't seen before
-- Avoid these specific topics or similar questions:"""
-                for q in correctly_answered[:5]:
-                    mastered_context += f"\n  * {q.get('question', '')[:100]}"
-                mastered_context += "\n- Focus on new aspects of the topic or challenging variations"
-            
-            # Customize prompt based on difficulty
-            difficulty_hints = {
-                "easy": "Simple, fundamental concepts. Include basic calculations. Keep language simple.",
-                "medium": "Real-world scenarios. Some calculations. Practical decision-making.",
-                "hard": "Complex scenarios. Multiple-step problems. Critical thinking required."
-            }
-            
-            prompt = f"""Generate {num_questions} personalized multiple-choice questions about "{topic}" for financial education.
-
-STUDENT PROFILE:
-- Name: {user_name}
-- Age: {user_age} years old
-- Hobbies/Interests: {hobbies}
-{history_context}{mastered_context}
-
-DIFFICULTY LEVEL: {difficulty.upper()}
-{difficulty_hints.get(difficulty, '')}
-
-REQUIREMENTS:
-1. Make questions relatable to the student's age ({user_age}) and interests ({hobbies})
-2. Focus on "{topic}" topic
-3. Correct answers should be randomly distributed (positions 0-3, NOT always position 0)
-4. Include diverse question types (calculations, concepts, scenarios, decisions)
-5. Include clear, educational explanations
-6. CRITICAL: Avoid questions user has already mastered - create NEW variations
-7. All questions must be engaging and age-appropriate
-8. If user has mastered the topic, create challenging scenarios or extensions
-
-RESPONSE FORMAT - RETURN ONLY VALID JSON (no markdown, no code blocks):
-{{
-    "questions": [
-        {{
-            "question_id": "q_1",
-            "question": "Question text here",
-            "type": "multiple_choice",
-            "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correct_answer": 0,
-            "explanation": "Explanation of why this answer is correct"
-        }},
-        ...
-    ]
-}}
-
-Important: Ensure correct_answer positions vary! Use 0, 1, 2, 3 randomly, not always 0.
-
-Generate {num_questions} questions now:"""
-            
-            response = model.generate_content(prompt)
-            response_text = response.text.strip()
-            
-            # Clean JSON if wrapped in markdown
-            if "```json" in response_text:
-                response_text = response_text.split("```json")[1].split("```")[0]
-            elif "```" in response_text:
-                response_text = response_text.split("```")[1].split("```")[0]
-            
-            result = json.loads(response_text)
-            questions = result.get("questions", [])
-            
-            # Validate questions
-            validated = []
-            for i, q in enumerate(questions[:num_questions]):
-                if not q.get("question") or len(q.get("options", [])) < 4:
-                    continue
-                    
-                validated_q = {
-                    "question_id": f"q_{i+1}",
-                    "question": q.get("question", ""),
-                    "type": "multiple_choice",
-                    "options": q.get("options", []),
-                    "correct_answer": int(q.get("correct_answer", 0)) % 4,  # Ensure 0-3
-                    "explanation": q.get("explanation", "")
-                }
-                validated.append(validated_q)
-            
-            if len(validated) < num_questions:
-                logger.warning(f"Only generated {len(validated)} valid questions out of {num_questions} requested")
-            
-            return validated[:num_questions]
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON parsing error from Gemini: {e}")
-            raise
-        except Exception as e:
-            logger.error(f"Error generating with Gemini: {e}")
-            raise
 
     def _generate_from_templates(
         self, topic: str, difficulty: str, num_questions: int, user_profile: dict,

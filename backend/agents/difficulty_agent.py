@@ -74,29 +74,28 @@ class DifficultyAgent(Agent):
         if not quiz_history:
             return self._age_based_difficulty(age)
 
-        # Calculate average score from recent quizzes
-        recent_quizzes = quiz_history[-5:] if len(quiz_history) > 5 else quiz_history
-        avg_score = sum(q.get("score", 0) for q in recent_quizzes) / len(recent_quizzes) if recent_quizzes else 0
-
-        # Normalize score to 0-1
-        normalized_score = avg_score / 100 if avg_score > 1 else avg_score
-
-        # Recommend based on score threshold
-        if normalized_score < self.easy_threshold:
-            return "easy"
-        elif normalized_score < self.medium_threshold:
-            return "medium"
-        else:
-            return "hard"
+        # Use most recent quiz score for immediate next quiz
+        # This ensures difficulty changes right after quiz submission
+        if len(quiz_history) > 0:
+            most_recent_score = quiz_history[0].get("score", 0)  # quiz_history is ordered DESC
+            normalized_score = most_recent_score / 100 if most_recent_score > 1 else most_recent_score
+            
+            # Recommend based on most recent score for immediate feedback
+            if normalized_score < 0.5:  # Less than 50%
+                return "easy"
+            elif normalized_score < 0.8:  # 50-80%
+                return "medium"
+            else:  # 80% and above
+                return "hard"
+        
+        return self._age_based_difficulty(age)
 
     def _age_based_difficulty(self, age: int) -> str:
         """Determine starting difficulty based on age"""
-        if age < 9:
-            return "easy"
-        elif age < 12:
-            return "medium"
-        else:
-            return "hard"
+        # New users always start with medium difficulty
+        # This allows them to experience balanced challenges
+        # as they progress, difficulty will adjust based on performance
+        return "medium"
 
     def _get_reasoning(self, difficulty: str, user_performance: dict) -> str:
         """Generate reasoning for difficulty recommendation"""

@@ -16,6 +16,8 @@ try:
 except ImportError:
     PyPDF2 = None
 
+from .data_cleaner import DataCleaner, TopicSelector
+
 logger = logging.getLogger(__name__)
 
 # PDF file paths
@@ -213,7 +215,7 @@ class PDFContentExtractor:
         topics = list(dict.fromkeys(topics))
         
         logger.info(f"Extracted {len(topics)} topics from PDF content")
-        return topics[:15]
+        return topics[:25]
     
     def _extract_topics_by_keywords(self, content: str, limit: int = 10) -> List[str]:
         """
@@ -250,12 +252,13 @@ class PDFContentExtractor:
     def get_topics_for_age(self, age: int) -> List[str]:
         """
         Get topics from PDF corresponding to user's age/class
+        Topics are cleaned, filtered, and ranked by relevance
         
         Args:
             age: User's age
         
         Returns:
-            List of topics from the appropriate PDF
+            List of cleaned, ranked topics from the appropriate PDF
         """
         try:
             # Map age to class
@@ -282,8 +285,16 @@ class PDFContentExtractor:
             # Extract topics from content
             topics = self.extract_topics_from_content(content)
             
-            logger.info(f"Retrieved {len(topics)} topics for age {age} from {class_name}")
-            return topics
+            # Clean and filter topics
+            cleaner = DataCleaner()
+            cleaned_topics = cleaner.clean_and_filter_topics(topics)
+            
+            # Rank topics by relevance for user's age
+            selector = TopicSelector()
+            ranked_topics = selector.select_best_topics(cleaned_topics, age, count=10)
+            
+            logger.info(f"Retrieved {len(ranked_topics)} cleaned/ranked topics for age {age} from {class_name}")
+            return ranked_topics
             
         except Exception as e:
             logger.error(f"Error getting topics for age {age}: {e}")

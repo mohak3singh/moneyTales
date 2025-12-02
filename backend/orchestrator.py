@@ -6,6 +6,7 @@ Main execution engine for the platform
 
 import logging
 import uuid
+import json
 from typing import Dict, Any, List
 from datetime import datetime
 
@@ -147,22 +148,17 @@ class Orchestrator:
                 "reasoning": difficulty_result.get("reasoning")
             })
 
-            # Step 4: Generate story
+            # Step 4: Get book/class source information
             step += 1
-            self._log_trace(request_id, step, "StoryAgent", "Generating Story", "in_progress", {})
+            book_class = "Class_7th"  # Default
+            age_to_class = {11: "Class_7th", 12: "Class_7th", 13: "Class_8th", 14: "Class_9th", 15: "Class_10th"}
+            if user.age in age_to_class:
+                book_class = age_to_class[user.age]
             
-            story_agent = self.agents.get("StoryAgent")
-            story_result = story_agent.execute(
-                user_profile=user_profile,
-                topic=topic or "money basics",
-                difficulty=difficulty,
-                rag_context=rag_context
-            ) if story_agent else {"story": ""}
+            book_info = f"📚 This quiz is from: **{book_class}** (Financial Education Textbook)"
             
-            story = story_result.get("story", "")
-            
-            self._log_trace(request_id, step, "StoryAgent", "Story Generated", "completed", {
-                "story_length": len(story)
+            self._log_trace(request_id, step, "PDFExtractor", "Book Source Retrieved", "completed", {
+                "book_class": book_class
             })
 
             # Step 5: Generate quiz
@@ -214,7 +210,7 @@ class Orchestrator:
                 "user_name": user.name,
                 "topic": topic or "money basics",
                 "difficulty": difficulty,
-                "story": story,
+                "story": book_info,
                 "questions": questions,
                 "total_questions": len(questions),
                 "trace_steps": step
@@ -431,7 +427,7 @@ class Orchestrator:
                         "topic": q.topic,
                         "difficulty": q.difficulty,
                         "score": q.score,
-                        "percentage": (q.score / q.max_score * 100) if q.max_score > 0 else 0,
+                        "percentage": q.score,  # q.score is already stored as percentage (0-100)
                         "date": q.created_at
                     } for q in quiz_history[:5]
                 ]

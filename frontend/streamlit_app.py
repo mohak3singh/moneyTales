@@ -16,26 +16,36 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for professional design
+# Custom CSS for modern, clean design with latest styling trends
 st.markdown("""
 <style>
     :root {
-        --primary-color: #667eea;
-        --secondary-color: #764ba2;
-        --accent-color: #f093fb;
-        --success-color: #4ade80;
-        --warning-color: #f59e0b;
-        --error-color: #ef4444;
+        /* Modern Color Palette - Inspired by latest design trends */
+        --primary: #6366f1;
+        --primary-light: #e0e7ff;
+        --primary-lighter: #f5f3ff;
+        --accent: #fbbf24;
+        --accent-light: #fef3c7;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --error: #ef4444;
+        --dark: #1f2937;
+        --dark-light: #374151;
+        --gray: #6b7280;
+        --gray-light: #f3f4f6;
+        --gray-lighter: #f9fafb;
+        --border: #e5e7eb;
     }
     
     /* Overall app styling */
     html, body, [class*="css"] {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+        scroll-behavior: smooth;
     }
     
-    /* Main background */
+    /* Main background - modern gradient */
     .stMainBlockContainer {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
         padding: 2rem 1rem !important;
     }
     
@@ -44,187 +54,274 @@ st.markdown("""
         margin: 0 auto;
     }
     
-    /* Header styling */
+    /* Header styling - modern and bold */
     h1 {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-weight: 800 !important;
-        letter-spacing: -1px;
+        color: #6366f1;
+        font-weight: 900 !important;
+        letter-spacing: -0.8px;
         margin: 0 !important;
         padding: 0 !important;
-        font-size: 2.5rem !important;
+        font-size: 2.75rem !important;
+        line-height: 1.2 !important;
     }
     
     h2 {
-        color: #1e293b;
-        font-weight: 700;
-        margin: 1.5rem 0 0.5rem 0 !important;
-        font-size: 2rem !important;
+        color: #1f2937;
+        font-weight: 800;
+        margin: 1.75rem 0 0.75rem 0 !important;
+        font-size: 2.125rem !important;
+        letter-spacing: -0.5px;
     }
     
     h3 {
-        color: #334155;
-        font-weight: 600;
-        margin: 1rem 0 0.5rem 0 !important;
-        font-size: 1.25rem !important;
+        color: #1f2937;
+        font-weight: 700;
+        margin: 1.25rem 0 0.625rem 0 !important;
+        font-size: 1.5rem !important;
     }
     
     h4 {
-        color: #475569;
-        font-weight: 600;
-        margin: 0.75rem 0 0.5rem 0 !important;
+        color: #374151;
+        font-weight: 700;
+        margin: 0.875rem 0 0.5rem 0 !important;
+        font-size: 1.125rem !important;
     }
     
-    /* Card styling */
+    /* Card styling - modern with subtle depth */
     .card {
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
         margin: 0;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        border: 1px solid #e2e8f0;
-        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f3f4f6;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .card:hover {
-        box-shadow: 0 8px 16px rgba(102, 126, 234, 0.12);
+        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.08);
+        border-color: #e0e7ff;
         transform: translateY(-2px);
     }
     
     .card-highlight {
-        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-        border: 2px solid #667eea;
+        background: linear-gradient(135deg, #f5f3ff 0%, #fef3c7 100%);
+        border: 1.5px solid #e0e7ff;
     }
     
-    /* Button styling */
+    /* Button styling - modern with rounded corners */
     .stButton > button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-        color: white !important;
+        background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%) !important;
+        color: #ffffff !important;
         border: none !important;
-        border-radius: 8px !important;
-        padding: 10px 20px !important;
-        font-weight: 600 !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+        border-radius: 10px !important;
+        padding: 12px 28px !important;
+        font-weight: 700 !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3) !important;
         font-size: 0.95rem !important;
         height: auto !important;
+        letter-spacing: 0.3px;
     }
     
     .stButton > button:hover {
-        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5) !important;
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4) !important;
         transform: translateY(-2px) !important;
+        background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
     }
     
     .stButton > button:active {
         transform: translateY(0) !important;
     }
     
-    /* Input styling */
-    .stSelectbox, .stRadio {
-        border-radius: 8px;
+    /* Input styling - modern and clean */
+    .stSelectbox, .stRadio, .stTextInput, .stSlider {
+        border-radius: 10px;
     }
     
-    .stSelectbox > div > div {
-        background: white !important;
-        border: 2px solid #e2e8f0 !important;
-        border-radius: 8px !important;
+    .stTextInput > div > div > input,
+    .stSelectbox > div > div,
+    .stDateInput > div > div > input {
+        background: #f9fafb !important;
+        border: 2px solid #f3f4f6 !important;
+        border-radius: 10px !important;
+        color: #1f2937 !important;
+        font-size: 0.95rem !important;
+        transition: all 0.2s ease !important;
     }
     
-    /* Metric cards */
+    .stTextInput > div > div > input:focus,
+    .stSelectbox > div > div:focus,
+    .stDateInput > div > div > input:focus {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1) !important;
+        background: #ffffff !important;
+    }
+    
+    /* Slider styling */
+    .stSlider > div > div > div > div {
+        background: #6366f1 !important;
+    }
+    
+    /* Metric cards - modern design */
     .stMetric {
-        background: white;
-        border-radius: 12px;
-        padding: 16px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        border: 1px solid #f1f5f9;
+        background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f3f4f6;
+        transition: all 0.3s ease;
+    }
+    
+    .stMetric:hover {
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.1);
     }
     
     .stMetricLabel {
-        color: #64748b;
-        font-size: 0.875rem;
-        font-weight: 500;
+        color: #6b7280;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     
-    /* Alert styling */
+    /* Alert styling - modern colors */
     .stAlert {
         border-radius: 12px;
         border-left: 4px solid;
+        padding: 16px !important;
     }
     
     .stSuccess {
         background-color: #f0fdf4 !important;
-        border-left-color: #4ade80 !important;
+        border-left-color: #10b981 !important;
+        color: #065f46 !important;
     }
     
     .stWarning {
         background-color: #fffbeb !important;
         border-left-color: #f59e0b !important;
+        color: #78350f !important;
     }
     
     .stError {
         background-color: #fef2f2 !important;
         border-left-color: #ef4444 !important;
+        color: #7f1d1d !important;
     }
     
-    /* Divider */
+    .stInfo {
+        background-color: #f0f9ff !important;
+        border-left-color: #3b82f6 !important;
+        color: #0c2340 !important;
+    }
+    
+    /* Divider - subtle and modern */
     hr {
         border: 0;
-        border-top: 1px solid #e2e8f0;
-        margin: 1.5rem 0 !important;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+        margin: 2rem 0 !important;
     }
     
-    /* User profile badge */
+    /* User profile badge - modern */
     .user-badge {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.875rem;
+        background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+        color: #ffffff;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.85rem;
         display: inline-block;
         margin: 0;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     
-    /* Quiz container */
+    /* Quiz container - modern design */
     .quiz-container {
-        background: white;
-        border-radius: 12px;
-        padding: 24px;
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 28px;
         margin: 0;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #f3f4f6;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
     
     .question-box {
-        background: #f8fafc;
-        border-left: 4px solid #667eea;
-        padding: 16px;
-        margin: 12px 0;
-        border-radius: 8px;
+        background: linear-gradient(135deg, #f5f3ff 0%, #f9fafb 100%);
+        border-left: 4px solid #6366f1;
+        padding: 20px;
+        margin: 16px 0;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
+        transition: all 0.2s ease;
+    }
+    
+    .question-box:hover {
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12);
     }
     
     .story-box {
-        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-        border: 2px solid #667eea;
-        border-radius: 12px;
-        padding: 20px;
-        margin: 0 0 16px 0;
+        background: linear-gradient(135deg, #f5f3ff 0%, #fef3c7 100%);
+        border: 1.5px solid #e0e7ff;
+        border-radius: 14px;
+        padding: 24px;
+        margin: 0 0 20px 0;
         line-height: 1.8;
         font-size: 1.05rem;
-        color: #334155;
+        color: #1f2937;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
     }
     
     /* Radio button styling */
     .stRadio > div {
         flex-direction: column;
+        gap: 12px;
     }
     
-    /* Expander styling */
+    /* Expander styling - modern */
     .streamlit-expanderHeader {
-        background: white;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
+        background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+        border-radius: 12px;
+        border: 1px solid #f3f4f6;
+        transition: all 0.2s ease;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        background: linear-gradient(135deg, #f5f3ff 0%, #fef3c7 100%);
+        border-color: #e0e7ff;
+    }
+    
+    /* Tab styling - modern underline style with larger, bold text */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        border-bottom: 2px solid #f3f4f6;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background-color: transparent;
+        border-radius: 0;
+        border: none;
+        color: #6b7280;
+        font-weight: 800 !important;
+        font-size: 1.05rem !important;
+        padding: 16px 24px !important;
+        padding-bottom: 16px !important;
+        transition: all 0.2s ease;
+        letter-spacing: 0.3px;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #6366f1;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: transparent;
+        color: #6366f1 !important;
+        border-bottom: 3px solid #6366f1 !important;
+        font-weight: 800 !important;
     }
     
     /* Remove extra padding */
@@ -237,9 +334,87 @@ st.markdown("""
         margin: 0;
     }
     
-    /* Text alignment */
+    /* Text styling - improved sizes */
     p {
-        margin: 0.5rem 0 !important;
+        margin: 0.625rem 0 !important;
+        color: #374151;
+        line-height: 1.7;
+        font-size: 1rem !important;
+        font-weight: 500;
+    }
+    
+    /* Topic and category cards - modern */
+    .topic-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+        border: 1.5px solid #f3f4f6;
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .topic-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #6366f1, #fbbf24);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .topic-card:hover {
+        box-shadow: 0 12px 30px rgba(99, 102, 241, 0.1);
+        border-color: #e0e7ff;
+        transform: translateY(-4px);
+    }
+    
+    .topic-card:hover::before {
+        opacity: 1;
+    }
+    
+    /* Form input backgrounds - modern */
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    textarea {
+        background-color: #f9fafb !important;
+        border: 2px solid #f3f4f6 !important;
+        border-radius: 10px !important;
+        color: #1f2937 !important;
+        padding: 12px 14px !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    input[type="email"]:focus,
+    textarea:focus {
+        border-color: #6366f1 !important;
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1) !important;
+        background-color: #ffffff !important;
+    }
+    
+    /* Link styling - modern */
+    a {
+        color: #6366f1;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    
+    a:hover {
+        color: #4f46e5;
+        text-decoration: underline;
+    }
+    
+    /* Smooth transitions throughout */
+    * {
+        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -280,17 +455,9 @@ if "show_register" not in st.session_state:
 if "available_topics" not in st.session_state:
     st.session_state.available_topics = []
 
-# User credentials mapping (user_id, name, password)
-USERS_CREDENTIALS = {
-    "alex": {"user_id": "child_001", "name": "Alex", "password": "alex123", "age": 10},
-    "sam": {"user_id": "child_002", "name": "Sam", "password": "sam123", "age": 12},
-    "jordan": {"user_id": "child_003", "name": "Jordan", "password": "jordan123", "age": 8},
-    "casey": {"user_id": "child_004", "name": "Casey", "password": "casey123", "age": 11},
-}
-
-# Merge demo credentials with registered credentials
+# User credentials mapping - only load from backend
 REGISTERED_CREDENTIALS = load_user_credentials()
-USERS_CREDENTIALS.update(REGISTERED_CREDENTIALS)
+USERS_CREDENTIALS = REGISTERED_CREDENTIALS
 
 
 def render_header():
@@ -339,17 +506,17 @@ def render_header():
             </style>
             """, unsafe_allow_html=True)
             
-            col_profile, col_menu = st.columns([2, 1], gap="small")
+            col_profile, col_menu = st.columns([3, 1], gap="small")
             
             with col_profile:
                 st.markdown(f"""
-                <div style='text-align: right; padding-top: 12px;'>
+                <div style='text-align: right; padding-top: 8px;'>
                     <div class='user-badge'>👤 {st.session_state.username}</div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col_menu:
-                if st.button("🚪 Sign Out", use_container_width=True, key="signout_btn"):
+                if st.button("Sign Out", use_container_width=False, key="signout_btn", help="Logout from your account"):
                     st.session_state.authenticated = False
                     st.session_state.username = None
                     st.session_state.user_id = None
@@ -369,13 +536,19 @@ def render_header():
 
 
 def login_page():
-    """Login/Sign-in page"""
+    """Login/Sign-in page with professional design"""
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
         st.markdown("<div style='text-align: center; padding: 3rem 0;'></div>", unsafe_allow_html=True)
-        st.markdown("<h1 style='text-align: center;'>💰 MoneyTales</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #64748b; font-size: 1.1rem; margin-bottom: 2rem;'>Financial Education for Kids</p>", unsafe_allow_html=True)
+        
+        # Logo and main heading
+        st.markdown("""
+        <div style='text-align: center; margin-bottom: 2rem;'>
+            <h1 style='font-size: 3rem; margin: 0;'>💰 MoneyTales</h1>
+            <p style='color: #64748b; font-size: 1.1rem; margin: 0.5rem 0 0 0; font-weight: 500;'>Financial Education for Kids</p>
+        </div>
+        """, unsafe_allow_html=True)
         
         st.markdown("---")
         
@@ -383,23 +556,27 @@ def login_page():
         tab1, tab2 = st.tabs(["🔓 Sign In", "📝 Register"])
         
         with tab1:
-            st.markdown("<h2 style='text-align: center;'>Sign In</h2>", unsafe_allow_html=True)
-            st.markdown("<p style='text-align: center; color: #64748b; margin-bottom: 2rem;'>Welcome back! Sign in to continue learning</p>", unsafe_allow_html=True)
+            st.markdown("<h2 style='text-align: center; margin-top: 0;'>Sign In to Your Account</h2>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; color: #64748b; margin-bottom: 1.5rem;'>Access your learning dashboard and continue your journey</p>", unsafe_allow_html=True)
             
-            # Login form
-            with st.form("login_form"):
+            # Login form with improved styling
+            with st.form("login_form", border=True):
                 username = st.text_input(
-                    "👤 Username",
-                    placeholder="Enter your username (e.g., alex, sam, jordan, casey)",
-                    key="login_username"
+                    "Username",
+                    placeholder="Enter your username",
+                    key="login_username",
+                    help="Your unique username"
                 )
                 
                 password = st.text_input(
-                    "🔐 Password",
+                    "Password",
                     type="password",
                     placeholder="Enter your password",
-                    key="login_password"
+                    key="login_password",
+                    help="Your account password"
                 )
+                
+                st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
                 
                 col1, col2, col3 = st.columns([1, 1, 1])
                 with col2:
@@ -446,73 +623,60 @@ def login_page():
                             st.session_state.available_topics = []  # Reset topics to reload them
                             st.success(f"✅ Welcome, {user_data['name']}!")
                             st.rerun()
-            
-            # Demo credentials info
-            st.markdown("---")
-            st.markdown("<h4 style='text-align: center; color: #64748b;'>📝 Demo Credentials</h4>", unsafe_allow_html=True)
-            
-            demo_users = [
-                ("👦 Alex", "alex / alex123"),
-                ("👧 Sam", "sam / sam123"),
-                ("👦 Jordan", "jordan / jordan123"),
-                ("👧 Casey", "casey / casey123"),
-            ]
-            
-            cols = st.columns(2, gap="medium")
-            for idx, (name, cred) in enumerate(demo_users):
-                with cols[idx % 2]:
-                    st.markdown(f"""
-                    <div class='card' style='text-align: center; padding: 12px;'>
-                        <p style='margin: 0 0 4px 0; font-weight: 600;'>{name}</p>
-                        <p style='margin: 0; color: #64748b; font-size: 0.85rem;'><code>{cred}</code></p>
-                    </div>
-                    """, unsafe_allow_html=True)
         
         with tab2:
-            st.markdown("<h2 style='text-align: center;'>Create Account</h2>", unsafe_allow_html=True)
-            st.markdown("<p style='text-align: center; color: #64748b; margin-bottom: 2rem;'>Join MoneyTales and start learning!</p>", unsafe_allow_html=True)
+            st.markdown("<h2 style='text-align: center; margin-top: 0;'>Create Your Account</h2>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; color: #64748b; margin-bottom: 1.5rem;'>Join MoneyTales and start your financial learning journey</p>", unsafe_allow_html=True)
             
-            # Registration form
-            with st.form("register_form"):
+            # Registration form with improved styling
+            with st.form("register_form", border=True):
                 name = st.text_input(
-                    "👤 Full Name",
+                    "Full Name",
                     placeholder="Enter your full name",
-                    key="register_name"
+                    key="register_name",
+                    help="Your real name"
                 )
                 
                 username_reg = st.text_input(
-                    "🔤 Username",
+                    "Username",
                     placeholder="Choose a username",
-                    key="register_username"
+                    key="register_username",
+                    help="3+ characters, unique identifier"
                 )
                 
                 age = st.slider(
-                    "🎂 Age",
+                    "Age",
                     min_value=5,
                     max_value=100,
                     value=10,
-                    key="register_age"
+                    key="register_age",
+                    help="Your current age"
                 )
                 
                 hobbies = st.text_input(
-                    "🎯 Hobbies (comma-separated)",
+                    "Hobbies",
                     placeholder="e.g., gaming, reading, sports",
-                    key="register_hobbies"
+                    key="register_hobbies",
+                    help="Your interests (comma-separated)"
                 )
                 
                 password_reg = st.text_input(
-                    "🔐 Password",
+                    "Password",
                     type="password",
                     placeholder="Enter a strong password",
-                    key="register_password"
+                    key="register_password",
+                    help="Minimum 6 characters"
                 )
                 
                 confirm_password = st.text_input(
-                    "🔐 Confirm Password",
+                    "Confirm Password",
                     type="password",
                     placeholder="Re-enter your password",
-                    key="register_confirm"
+                    key="register_confirm",
+                    help="Must match password above"
                 )
+                
+                st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
                 
                 col1, col2, col3 = st.columns([1, 1, 1])
                 with col2:
@@ -594,7 +758,7 @@ def login_page():
 
 
 def render_navigation():
-    """Render top navigation"""
+    """Render top navigation with larger, bold text"""
     nav_items = [
         ("🏠 Explore", "explore"),
         ("📈 Progress", "progress"),
@@ -608,11 +772,14 @@ def render_navigation():
     for i, (label, page_id) in enumerate(nav_items):
         with cols[i]:
             is_active = st.session_state.page == page_id
-            btn_style = "color: white; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" if is_active else ""
             
-            if st.button(label, key=f"nav_{page_id}", use_container_width=True):
-                st.session_state.page = page_id
-                st.rerun()
+            # Increase button text size and make active state more prominent
+            if is_active:
+                st.markdown(f"<div style='text-align: center; padding: 14px 12px; background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%); border-radius: 10px; font-size: 1.15rem; font-weight: 800; color: white; cursor: pointer;'>{label}</div>", unsafe_allow_html=True)
+            else:
+                if st.button(label, key=f"nav_{page_id}", use_container_width=True, help=f"Go to {label.split()[-1]}"):
+                    st.session_state.page = page_id
+                    st.rerun()
     
     st.markdown("---")
 
@@ -674,7 +841,7 @@ def explore_page():
         generate_btn = st.button("🚀 Generate Quiz", key="generate_quiz", use_container_width=True)
     
     if generate_btn:
-        with st.spinner("✨ Generating personalized quiz..."):
+        with st.spinner("✨ Generating personalized quiz... This may take a moment..."):
             try:
                 response = requests.post(
                     f"{API_BASE_URL}/quiz/generate",
@@ -682,7 +849,7 @@ def explore_page():
                         "user_id": st.session_state.user_id,
                         "topic": topic
                     },
-                    timeout=30
+                    timeout=120
                 )
                 
                 if response.status_code == 200:
@@ -713,15 +880,7 @@ def explore_page():
         </div>
         """, unsafe_allow_html=True)
         
-        # Display story in beautiful box
-        st.markdown("<h3>📖 Your Story</h3>", unsafe_allow_html=True)
-        st.markdown(f"""
-        <div class='story-box'>
-            {quiz.get('story', '')}
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Display questions
+        # Display questions directly
         st.markdown("<h3>❓ Questions</h3>", unsafe_allow_html=True)
         
         questions = quiz.get("questions", [])
@@ -1032,6 +1191,11 @@ def settings_page():
         st.markdown("<h3>👤 User Profile</h3>", unsafe_allow_html=True)
         st.write(f"**Current User:** {st.session_state.username}")
         st.write(f"**User ID:** {st.session_state.user_id}")
+        
+        # Display user age from session state
+        user_age = st.session_state.get("user_age", "Not set")
+        st.write(f"**Age:** {user_age} years old" if isinstance(user_age, int) else f"**Age:** {user_age}")
+        
         st.markdown("")
         
         st.markdown("---")

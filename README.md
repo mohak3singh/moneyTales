@@ -1,505 +1,764 @@
 # MoneyTales - Financial Education for Kids 💰
 
-A comprehensive, hackathon-ready platform for teaching financial literacy to children through personalized AI agents, interactive quizzes, and gamification.
-
-## 🎯 Project Overview
-
-**MoneyTales** is a full-stack educational platform that combines:
-- **6 Specialized AI Agents** for content generation, evaluation, and personalization
-- **RAG (Retrieval-Augmented Generation)** knowledge base powered by financial education PDFs
-- **FastAPI Backend** with SQLite persistence
-- **Streamlit Frontend** for an engaging user experience
-- **Gamification System** with points, badges, and levels
-
-### Core Concept
-Kids learn financial concepts through:
-1. 📖 **Personalized Stories** tailored to their age and interests
-2. 🎯 **Adaptive Quizzes** that adjust difficulty based on performance
-3. 🏆 **Gamification** that rewards engagement and learning
-4. 📊 **Progress Tracking** to monitor improvements
+A full-stack AI-powered platform teaching financial literacy through personalized quizzes, adaptive difficulty, and gamification.
 
 ---
 
-## 📊 Architecture Overview
+## 🎯 Quick Overview
+
+**What it does:**
+- Kids take personalized quizzes with AI-generated stories
+- Difficulty adapts based on their performance
+- Earn points, badges, and level up
+- Track progress on a leaderboard
+
+**Key Components:**
+- **6 AI Agents** working together
+- **RAG Knowledge Base** for content retrieval
+- **FastAPI Backend** with SQLite database
+- **Streamlit Frontend** for user interface
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+```bash
+Python 3.8+
+pip
+```
+
+### Installation & Running
+
+**1. Backend Setup:**
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python main.py
+```
+Backend runs at: `http://localhost:8000`
+
+**2. Frontend Setup:**
+```bash
+# From project root
+streamlit run frontend/streamlit_app.py
+```
+Frontend opens at: `http://localhost:8501`
+
+### Environment Configuration
+
+Create `.env` file in project root:
+```bash
+OPENAI_API_KEY=your_key_here
+AZURE_OPENAI_ENDPOINT=https://oai.stg.azure.backbase.eu
+AZURE_DEPLOYMENT_NAME=gpt-4o
+GEMINI_API_KEY=your_key_here
+```
+
+⚠️ **Important:** `.env` is in `.gitignore` - never commit credentials to GitHub
+
+---
+
+## 🏗️ Complete System Architecture
+
+### End-to-End Quiz Generation Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                   FRONTEND (Streamlit)                      │
-│     - User profiles • Quiz interface • Progress tracking    │
-└──────────────────────┬──────────────────────────────────────┘
+│ USER (Streamlit Frontend)                                   │
+│ "I want to take a quiz on saving money"                     │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           ▼
+            ┌──────────────────────────────┐
+            │ FastAPI Router               │
+            │ POST /api/quiz/generate      │
+            │ {user_id, topic}             │
+            └──────────────┬───────────────┘
+                           │
+                           ▼
+        ┌──────────────────────────────────────────────┐
+        │ ORCHESTRATOR (Main Coordinator)              │
+        │ - Receives request                           │
+        │ - Generates request_id for tracing           │
+        │ - Calls agents in sequence                   │
+        │ - Logs each step for debugging               │
+        └──────────────┬───────────────────────────────┘
                        │
-                       ▼
-┌─────────────────────────────────────────────────────────────┐
-│                 API LAYER (FastAPI)                         │
-│   /generateQuiz • /submitAnswers • /getPoints • /trace     │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────────┐
-│              ORCHESTRATOR (Request Coordinator)             │
-│      - Routes requests through agents                       │
-│      - Logs execution steps for debugging                   │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-        ┌──────────────┼──────────────┐
-        ▼              ▼              ▼
-  ┌──────────┐  ┌──────────┐  ┌──────────┐
-  │ RAGAgent │  │  Story   │  │ QuizGen  │
-  │(Retrieve)│  │Agent     │  │Agent     │
-  └──────────┘  └──────────┘  └──────────┘
-        │              │              │
-        ▼              ▼              ▼
-  ┌──────────┐  ┌──────────┐  ┌──────────┐
-  │ Difficulty│ │Evaluator │  │ Gamifi   │
-  │Agent     │  │Agent     │  │cation    │
-  └──────────┘  └──────────┘  └──────────┘
-        │              │              │
-        └──────────────┼──────────────┘
-                       ▼
-        ┌─────────────────────────────┐
-        │   DATABASE (SQLite)         │
-        │ - Users • Quizzes • Points  │
-        │ - Badges • Trace Logs       │
-        └─────────────────────────────┘
-        
-        ┌─────────────────────────────┐
-        │   RAG SYSTEM                │
-        │ - PDFs → Text → Chunks      │
-        │ - Vector Store (FAISS MVP)  │
-        │ - Semantic Search           │
-        └─────────────────────────────┘
+        ┌──────────────┼──────────────┬─────────────────┐
+        │              │              │                 │
+        ▼              ▼              ▼                 ▼
+   ┌─────────┐  ┌──────────────┐  ┌─────────────┐  ┌──────────┐
+   │DATABASE │  │RAG AGENT     │  │DIFFICULTY   │  │STORY     │
+   │         │  │              │  │AGENT        │  │AGENT     │
+   │Fetches: │  │Searches for: │  │Analyzes:    │  │Generates:│
+   │- User   │  │"saving"      │  │- Quiz       │  │Personal- │
+   │- Profile   │  │content    │  │  history    │  │ized      │
+   │- Age    │  │Returns:      │  │- Recent     │  │narrative │
+   │- Quiz   │  │- 3 chunks    │  │  scores     │  │for:      │
+   │  history   │  │  about     │  │Recommends:  │  │- 10yo    │
+   │- Avg    │  │  saving      │  │- Level:     │  │- Gaming  │
+   │  score  │  │- Context     │  │  MEDIUM     │  │  interest│
+   └────┬────┘  └────┬──────────┘  └────┬────────┘  └────┬─────┘
+        │            │                  │                │
+        │ Returns:   │ Returns:         │ Returns:      │ Returns:
+        │ {         │ {                │ {             │ {
+        │  age:10,  │  chunks: [...]   │  difficulty:  │  story:
+        │  hobbies: │ }                │  "medium"     │  "Alex's
+        │  gaming   │                  │ }             │   Money
+        │ }         │                  │               │   Adv."
+        └───────────┼──────────────────┼───────────────┘
+                    │                  │
+                    ▼                  ▼
+            ┌─────────────────────────────────┐
+            │ QUIZ AGENT                      │
+            │                                 │
+            │ Generates 5 questions:          │
+            │ - Level: MEDIUM                 │
+            │ - Topic: Saving Money           │
+            │ - Multiple choice (4 options)   │
+            │ - With explanations             │
+            │                                 │
+            │ Example Q:                      │
+            │ "Why is saving important?"      │
+            │ A) To buy toys                  │
+            │ B) To use for future goals ✓    │
+            │ C) To show off                  │
+            │ D) No reason                    │
+            └──────────────┬──────────────────┘
+                           │
+                ┌──────────┴──────────┐
+                │                     │
+        ┌───────▼──────┐    ┌─────────▼──────┐
+        │Question 1    │    │Question 2      │
+        │"What is..."  │    │"Why should...? │
+        └───────┬──────┘    └─────────┬──────┘
+                │                     │
+                └──────────┬──────────┘
+                           │
+            ┌──────────────▼───────────────┐
+            │ RESPONSE TO FRONTEND         │
+            │                              │
+            │ {                            │
+            │   "request_id": "uuid123",   │
+            │   "story": "Alex's story...",│
+            │   "questions": [Q1, Q2, ...],│
+            │   "difficulty": "medium",    │
+            │   "topic": "saving money"    │
+            │ }                            │
+            └──────────────┬───────────────┘
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │ Frontend    │
+                    │ Displays    │
+                    │ Story +     │
+                    │ Questions   │
+                    └─────────────┘
 ```
+
+### Answer Submission & Evaluation Flow
+
+```
+┌─────────────────────────────────────────┐
+│ USER SUBMITS ANSWERS                    │
+│ Answered 4 out of 5 correctly (80%)     │
+└──────────────────────┬──────────────────┘
+                       │
+                       ▼
+        ┌──────────────────────────────┐
+        │ FastAPI Router               │
+        │ POST /api/submit/answers     │
+        │ {user_id, answers, questions}│
+        └──────────────┬───────────────┘
+                       │
+                       ▼
+      ┌────────────────────────────────────┐
+      │ EVALUATOR AGENT                    │
+      │                                    │
+      │ - Compare user answers to correct  │
+      │ - Calculate score: 4/5 = 80%       │
+      │ - Generate feedback for each:      │
+      │   Q1: "Correct! ✓"                 │
+      │   Q2: "Great explanation!"         │
+      │   Q3: "Close! Think about..."      │
+      └──────────────┬─────────────────────┘
+                     │
+                     ▼
+      ┌────────────────────────────────────┐
+      │ GAMIFICATION AGENT                 │
+      │                                    │
+      │ Calculate Points:                  │
+      │ - Base: +10 points                 │
+      │ - Score 80%: +20 bonus             │
+      │ - Total: +30 points ✓              │
+      │                                    │
+      │ Check Achievements:                │
+      │ - First Quiz? No                   │
+      │ - Perfect score? No                │
+      │ - Level up? Not yet                │
+      │ - Badges earned? None              │
+      └──────────────┬─────────────────────┘
+                     │
+                     ▼
+      ┌────────────────────────────────────┐
+      │ DATABASE UPDATES                   │
+      │                                    │
+      │ - Save quiz attempt (80% score)    │
+      │ - Update user.points: +30          │
+      │ - Update user.level: check         │
+      │ - Log gamification event           │
+      └──────────────┬─────────────────────┘
+                     │
+                     ▼
+      ┌────────────────────────────────────┐
+      │ DIFFICULTY AGENT (for next quiz)   │
+      │                                    │
+      │ Analyzes: 80% score                │
+      │ Decision: Score ≥ 80%              │
+      │ Next difficulty: HARD ↑            │
+      │ (User progressed!)                 │
+      └──────────────┬─────────────────────┘
+                     │
+                     ▼
+      ┌────────────────────────────────────┐
+      │ RESPONSE TO FRONTEND               │
+      │                                    │
+      │ {                                  │
+      │   "score": 80,                     │
+      │   "percentage": 80.0,              │
+      │   "feedback": "Excellent work!",   │
+      │   "points_earned": 30,             │
+      │   "total_points": 380,             │
+      │   "level": 0,                      │
+      │   "badges_earned": [],             │
+      │   "leveled_up": false,             │
+      │   "next_difficulty": "hard"        │
+      │ }                                  │
+      └──────────────┬─────────────────────┘
+                     │
+                     ▼
+              ┌─────────────┐
+              │ Frontend    │
+              │ Shows:      │
+              │ - Score 80% │
+              │ - +30 pts   │
+              │ - Feedback  │
+              │ - Buttons   │
+              │   for       │
+              │   retake    │
+              └─────────────┘
+```
+
+---
+
+## 🤖 Six AI Agents: Detailed Breakdown
+
+### 1. **StoryAgent** - Narrative Generation
+**Purpose:** Creates engaging, age-appropriate stories to introduce quiz topics
+
+**Input:**
+- User profile (age, interests/hobbies, name)
+- Topic (e.g., "saving money")
+- Difficulty level (easy/medium/hard)
+
+**Process:**
+1. Personalizes story around user's interests
+2. Simplifies language for age group
+3. Creates relatable characters & scenarios
+4. Adjusts complexity based on difficulty
+
+**Output:**
+- 200-300 word engaging story
+- Example: "Alex's Money Adventure"
+
+**Example for 10-year-old gamer:**
+```
+"🌟 Alex's Gaming Prize Challenge 🌟
+You want to save for a gaming tournament! 
+Every chore = $5 earned...
+[Story continues with gaming themes]
+```
+
+---
+
+### 2. **QuizAgent** - Question Generation
+**Purpose:** Creates multiple-choice questions aligned with story & topic
+
+**Input:**
+- Topic & difficulty
+- Story context (what was covered)
+- Knowledge from RAG system
+
+**Process:**
+1. Generates 5 questions at correct difficulty
+2. Creates 4 multiple-choice options
+3. Marks correct answer
+4. Easy: "What is...?", "Define..."
+5. Medium: "Why...?", "How...?"
+6. Hard: "Compare...", "Analyze..."
+
+**Output:**
+```json
+{
+  "question": "Why is saving money important?",
+  "options": ["Reason 1", "Reason 2", "Reason 3", "Reason 4"],
+  "correct_answer": 1,
+  "difficulty": "medium",
+  "explanation": "Saving helps achieve future goals..."
+}
+```
+
+---
+
+### 3. **DifficultyAgent** - Performance Analysis
+**Purpose:** Determines quiz difficulty based on user performance
+
+**Input:**
+- User's quiz history
+- Recent scores
+- Age of user
+
+**Process:**
+1. Analyzes most recent quiz score
+2. Applies thresholds:
+   - Score < 50% → Easy (needs help)
+   - Score 50-80% → Medium (progressing)
+   - Score ≥ 80% → Hard (advanced)
+3. New users start at "medium"
+
+**Output:**
+```python
+recommended_difficulty = "hard"  # User ready for challenge
+```
+
+**Example:**
+```
+User's Recent Scores:
+- Quiz 1: 40% → Next: Easy
+- Quiz 2: 65% → Next: Medium
+- Quiz 3: 85% → Next: Hard ✓
+```
+
+---
+
+### 4. **RAGAgent** - Knowledge Retrieval
+**Purpose:** Fetches relevant content from knowledge base
+
+**Input:**
+- Query (e.g., "saving money")
+- Topic
+
+**Process:**
+1. Searches vector store for relevant chunks
+2. Ranks by semantic similarity
+3. Returns top 3 most relevant pieces
+4. Provides context to other agents
+
+**Output:**
+```
+[
+  {chunk: "Saving is putting money aside...", similarity: 0.92},
+  {chunk: "Benefits of savings...", similarity: 0.87},
+  {chunk: "How to save effectively...", similarity: 0.84}
+]
+```
+
+---
+
+### 5. **EvaluatorAgent** - Answer Grading
+**Purpose:** Grades quiz responses & provides feedback
+
+**Input:**
+- Questions with correct answers
+- User's submitted answers
+- Question details
+
+**Process:**
+1. Compares each answer to correct
+2. Calculates score (correct/total)
+3. Generates personalized feedback
+4. Explains why answers were right/wrong
+
+**Output:**
+```json
+{
+  "score": 4,
+  "max_score": 5,
+  "percentage": 80.0,
+  "feedback": [
+    "Q1: Correct! ✓",
+    "Q2: Almost! Think about...",
+    "Q3: Great reasoning!",
+    "Q4: Good catch!",
+    "Q5: Let's review this one..."
+  ]
+}
+```
+
+---
+
+### 6. **GamificationAgent** - Rewards System
+**Purpose:** Manages points, badges, levels, and achievements
+
+**Input:**
+- Quiz score (percentage)
+- User's current progress
+- Quiz history
+
+**Process:**
+1. Calculates base points (+10)
+2. Adds score bonuses:
+   - 80%+ score: +20
+   - 100% score: +50
+3. Checks badge conditions:
+   - First Quiz? → "First Quiz Badge"
+   - 100% score? → "Perfect Score"
+   - 5 quizzes completed? → "5-Quiz Streak"
+4. Checks level thresholds:
+   - Every 500 points = +1 level
+
+**Output:**
+```json
+{
+  "points_earned": 30,
+  "total_points": 380,
+  "level": 0,
+  "next_level_in": 120,
+  "badges_earned": [],
+  "new_badges": [],
+  "leveled_up": false,
+  "position_in_leaderboard": 4
+}
+```
+
+---
+
+## 📊 Difficulty System Deep Dive
+
+### Difficulty Thresholds
+```
+EASY:   Score < 50%     (Struggling, needs simpler content)
+MEDIUM: Score 50-80%    (Learning, steady progress)
+HARD:   Score ≥ 80%     (Mastering, ready for challenge)
+```
+
+### Question Characteristics
+
+| Level | Question Type | Example | Length |
+|-------|---------------|---------|--------|
+| **Easy** | Recall/Definition | "What is saving?" | Short |
+| **Medium** | Application | "How can you save money?" | Medium |
+| **Hard** | Analysis/Synthesis | "Compare saving vs spending..." | Long |
+
+### Cache Strategy
+- Questions cached by: `{topic}_{user_age}_{difficulty}`
+- Prevents same question reuse
+- Different difficulties = different cache
 
 ---
 
 ## 📁 Project Structure
 
 ```
-MoneyTales/
-├── backend/
-│   ├── agents/                    # 6 AI Agents
-│   │   ├── base_agent.py         # Base agent class
-│   │   ├── story_agent.py        # Story generation (personalized narratives)
-│   │   ├── quiz_agent.py         # Quiz generation (multiple choice questions)
-│   │   ├── difficulty_agent.py   # Difficulty assessment & recommendation
-│   │   ├── rag_agent.py          # Knowledge base retrieval
-│   │   ├── evaluator_agent.py    # Answer evaluation & feedback
-│   │   └── gamification_agent.py # Points, badges, levels
-│   ├── db/
-│   │   ├── models.py             # Data classes (User, QuizAttempt, etc)
-│   │   ├── database.py           # SQLite ORM-like interface
-│   │   └── mock_users.py         # Test data
-│   ├── services/
-│   │   ├── pdf_ingestion.py      # PDF to text conversion
-│   │   ├── chunker.py            # Document chunking (section-aware)
-│   │   └── vectorstore.py        # Vector embeddings & search
-│   ├── rag/
-│   │   └── __init__.py           # RAGManager orchestration
-│   ├── routers/
-│   │   ├── quiz_router.py        # /generateQuiz, /trace endpoints
-│   │   ├── submit_router.py      # /submitAnswers endpoint
-│   │   └── gamification_router.py # /getPoints, /stats endpoints
-│   ├── orchestrator.py           # Main request coordinator
-│   ├── main.py                   # FastAPI application
-│   └── requirements.txt          # Python dependencies
-├── frontend/
-│   └── streamlit_app.py          # Streamlit UI
-├── data/
-│   ├── pdfs/                     # Place PDFs here
-│   ├── text/                     # Extracted text files
-│   └── embeddings/               # Vector embeddings
-├── .gitignore
-└── README.md
+backend/
+├── agents/
+│   ├── base_agent.py           # Base class for all agents
+│   ├── story_agent.py          # Narrative generation
+│   ├── quiz_agent.py           # Question generation
+│   ├── difficulty_agent.py     # Performance analysis
+│   ├── rag_agent.py            # Knowledge retrieval
+│   ├── evaluator_agent.py      # Answer grading
+│   └── gamification_agent.py   # Rewards system
+├── db/
+│   ├── database.py             # SQLite operations
+│   ├── models.py               # Data classes
+│   └── mock_users.py           # Test data
+├── services/
+│   ├── pdf_ingestion.py        # PDF extraction
+│   ├── chunker.py              # Text chunking
+│   ├── vectorstore.py          # Vector embeddings
+│   ├── pdf_content_extractor.py # PDF parsing
+│   ├── pdf_question_generator.py # Question generation
+│   ├── topic_suggester.py      # Topic recommendations
+│   └── data_cleaner.py         # Data cleaning
+├── routers/
+│   ├── quiz_router.py          # Quiz endpoints
+│   ├── submit_router.py        # Answer submission
+│   ├── auth_router.py          # User authentication
+│   ├── gamification_router.py  # Points & leaderboard
+│   └── topics_router.py        # Topic suggestions
+├── rag/
+│   └── __init__.py             # RAG orchestration
+├── orchestrator.py             # Main coordinator
+├── main.py                     # FastAPI application
+└── requirements.txt            # Dependencies
+
+frontend/
+└── streamlit_app.py            # User interface
+
+data/
+├── pdfs/                       # Educational PDFs
+├── text/                       # Extracted text
+└── embeddings/                 # Vector store
 ```
 
 ---
 
-## 🚀 Quick Start
+## 📚 API Endpoints Reference
 
-### Prerequisites
-- Python 3.8+
-- pip
+| Endpoint | Method | Purpose | Input |
+|----------|--------|---------|-------|
+| `/api/auth/register` | POST | Create user | name, age, hobbies |
+| `/api/auth/login` | POST | User login | username, password |
+| `/api/quiz/generate` | POST | Create quiz | user_id, topic |
+| `/api/submit/answers` | POST | Submit answers | user_id, answers |
+| `/api/gamification/stats/{user_id}` | GET | User rank | user_id |
+| `/api/gamification/leaderboard` | GET | Top 10 | limit=10 |
+| `/api/quiz/trace/{request_id}` | GET | Debug logs | request_id |
+| `/api/topics/suggestions` | POST | Topic ideas | user_id |
 
-### 1. Setup Backend
+---
 
-```bash
-cd backend
+## 🎮 Complete Gamification System
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
+### Points Breakdown
+```
+Per Quiz:
+  - Completion:     +10 pts
+  - 50-79% score:   +10 pts
+  - 80-99% score:   +20 pts
+  - 100% score:     +50 pts
+  
+Badges:
+  - First Quiz:     1 point
+  - Perfect Score:  Unlock when 100%
+  - 5-Quiz Streak:  After 5 consecutive quizzes
+  - Financial Pro:  After 10 quizzes
+  
+Total = Base + Score Bonus
 ```
 
-### 2. Run Backend
+### Level Progression
+```
+Points Required for Levels:
+- Level 0: 0-499 pts (Start)
+- Level 1: 500-999 pts
+- Level 2: 1000-1499 pts
+- Level 3: 1500+ pts
 
-```bash
-# From backend directory
-python main.py
+Example:
+Current: 380 pts (Level 0)
+After quiz: +30 pts = 410 pts (Still Level 0)
+(Need 90 more for Level 1)
 ```
 
-The FastAPI server will start at `http://localhost:8000`
+---
 
-Check health: `http://localhost:8000/health`
-API docs: `http://localhost:8000/docs`
+## 💾 Database Design
 
-### 3. Run Frontend
+### Users Table
+```
+user_id (PK)
+name
+age
+hobbies (comma-separated)
+level
+points
+badges (comma-separated)
+created_at
+```
+
+### Quiz Attempts Table
+```
+attempt_id (PK)
+user_id (FK)
+quiz_id
+topic
+difficulty
+score
+max_score
+time_taken_seconds
+answered_questions
+correct_answers
+created_at
+```
+
+### Gamification Events Table
+```
+event_id (PK)
+user_id (FK)
+event_type (QUIZ_COMPLETED, BADGE_EARNED, etc)
+points_awarded
+created_at
+```
+
+### Trace Logs Table
+```
+log_id (PK)
+request_id
+step_number
+agent_name
+status
+duration_ms
+created_at
+```
+
+---
+
+## 🔄 Complete Request Lifecycle Example
+
+### Scenario: 10-year-old gamer takes first quiz
+
+```
+1. USER REGISTERS
+   Name: Alex
+   Age: 10
+   Interests: Gaming, Drawing
+   
+2. USER CLICKS "TAKE QUIZ"
+   Topic: "Saving Money"
+   
+3. BACKEND PROCESSES:
+   
+   Step 1: DATABASE
+   ├─ Fetches: Alex's profile
+   ├─ Quiz history: [] (none yet)
+   └─ Avg score: N/A
+   
+   Step 2: RAG AGENT
+   ├─ Searches: "saving money"
+   ├─ Returns: 3 content chunks
+   └─ Total context: 2000 chars
+   
+   Step 3: DIFFICULTY AGENT
+   ├─ Analyzes: First quiz
+   ├─ Decision: First time? Use MEDIUM
+   └─ Difficulty: MEDIUM
+   
+   Step 4: STORY AGENT
+   ├─ Creates: Gaming-themed story
+   ├─ Topic: Saving for gaming tournament
+   ├─ Age: Simplified for 10-year-old
+   └─ Result: 250-word personalized story
+   
+   Step 5: QUIZ AGENT
+   ├─ Generates: 5 medium-level questions
+   ├─ Topics: All about saving money
+   ├─ Format: Multiple choice with explanations
+   └─ Result: 5 questions ready
+   
+   Step 6: ORCHESTRATOR
+   ├─ Logs: All steps completed
+   ├─ Time: 2.5 seconds
+   └─ Status: SUCCESS
+   
+4. FRONTEND DISPLAYS
+   ├─ Story: "Alex's Gaming Prize"
+   ├─ 5 Questions about saving
+   └─ Submit button
+   
+5. USER ANSWERS: 4/5 correct (80%)
+   
+6. BACKEND EVALUATES
+   
+   Step 1: EVALUATOR AGENT
+   ├─ Score: 4/5 = 80%
+   ├─ Feedback: Generated for each question
+   └─ Result: 80% score calculated
+   
+   Step 2: GAMIFICATION AGENT
+   ├─ Points: 10 (base) + 20 (80% bonus) = 30
+   ├─ Badges: None yet
+   ├─ Level: Still Level 0 (30/500)
+   └─ Result: +30 points
+   
+   Step 3: DATABASE UPDATES
+   ├─ Save: Quiz attempt (80% score)
+   ├─ Update: User points (30)
+   ├─ Update: User level (0)
+   └─ Status: SAVED
+   
+   Step 4: DIFFICULTY AGENT
+   ├─ Next quiz analysis: 80% score
+   ├─ Threshold check: ≥ 80% = HARD
+   ├─ Decision: Next quiz = HARD
+   └─ Reasoning: User ready to progress
+   
+7. RESPONSE SENT
+   {
+     "score": 80,
+     "points_earned": 30,
+     "total_points": 30,
+     "level": 0,
+     "next_difficulty": "hard",
+     "badges_earned": ["First Quiz"],
+     "leaderboard_position": 3
+   }
+   
+8. FRONTEND SHOWS
+   ├─ "Great job! 80%!"
+   ├─ "+30 points"
+   ├─ "🎖️ First Quiz Badge!"
+   ├─ Leaderboard position: 3
+   └─ "Next quiz will be HARD"
+```
+
+---
+
+## ✅ Key Features
+
+- ✅ **6 AI Agents** with specialized roles
+- ✅ **Adaptive Difficulty** based on performance
+- ✅ **Gamification** with points, badges, levels
+- ✅ **RAG System** for knowledge retrieval
+- ✅ **Leaderboard** with real-time rankings
+- ✅ **User Authentication** with login/register
+- ✅ **Request Tracing** for debugging
+- ✅ **Azure OpenAI GPT-4o** integration
+- ✅ **SQLite Database** for persistence
+- ✅ **Streamlit Frontend** for UI
+
+---
+
+## 🛠️ Quick Development Commands
 
 ```bash
-# From project root
+# Start backend
+cd backend && python main.py
+
+# Start frontend
 streamlit run frontend/streamlit_app.py
-```
 
-The Streamlit app will open at `http://localhost:8501`
+# View API documentation
+http://localhost:8000/docs
 
----
+# Check system health
+curl http://localhost:8000/health
 
-## 📚 API Endpoints
-
-### Quiz Generation
-**POST** `/api/quiz/generate`
-```json
-{
-  "user_id": "child_001",
-  "topic": "saving money"
-}
-```
-**Response:**
-```json
-{
-  "request_id": "uuid",
-  "story": "...",
-  "questions": [...],
-  "difficulty": "medium"
-}
-```
-
-### Submit Answers
-**POST** `/api/submit/answers`
-```json
-{
-  "user_id": "child_001",
-  "questions": [...],
-  "answers": [0, 1, 2, ...],
-  "topic": "saving money",
-  "difficulty": "medium"
-}
-```
-**Response:**
-```json
-{
-  "score": 80,
-  "percentage": 80.0,
-  "feedback": "...",
-  "points_earned": 30,
-  "badges_earned": [...],
-  "new_level": 2,
-  "leveled_up": true
-}
-```
-
-### Get User Points
-**GET** `/api/gamification/points/{user_id}`
-
-**Response:**
-```json
-{
-  "points": 350,
-  "level": 2,
-  "badges": ["First Quiz", "5-Quiz Streak"],
-  "quizzes_completed": 6
-}
-```
-
-### Get User Stats
-**GET** `/api/gamification/stats/{user_id}`
-
-### Trace Logs
-**GET** `/api/quiz/trace/{request_id}`
-
-Shows step-by-step execution of all agents for debugging
-
----
-
-## 🎮 Features
-
-### 1. **AI Agents** (6 Specialized)
-| Agent | Purpose | Input | Output |
-|-------|---------|-------|--------|
-| **StoryAgent** | Generate personalized stories | User profile, topic, difficulty | Engaging narrative |
-| **QuizAgent** | Create quiz questions | Topic, difficulty, context | 5 multiple-choice Qs |
-| **DifficultyAgent** | Assess user performance | Quiz history, age | Recommended difficulty |
-| **RAGAgent** | Retrieve knowledge | Query | Relevant context |
-| **EvaluatorAgent** | Grade answers | Questions, answers | Score, feedback |
-| **GamificationAgent** | Manage rewards | Performance | Points, badges, levels |
-
-### 2. **Gamification System**
-- **Points**: Earned per quiz (10 base + bonuses for high scores)
-- **Badges**: First Quiz, Perfect Score, 5-Quiz Streak, Financial Pro
-- **Levels**: Progress through levels with point milestones
-- **Leaderboard**: Top performers ranked by points
-
-### 3. **Adaptive Learning**
-- Difficulty adjusts based on quiz performance
-- Content personalized to age and interests (hobbies)
-- Progress tracking with average score calculation
-- Historical quiz data for pattern analysis
-
-### 4. **RAG Knowledge Base**
-- Sample financial education content embedded
-- Semantic chunking (section-aware)
-- Vector search for relevant context
-- Fallback handling for missing PDFs
-
-### 5. **Database Features**
-- User profiles with personalization data
-- Complete quiz history
-- Gamification events logging
-- Request trace logs for debugging
-
----
-
-## 📖 Usage Example
-
-### Story for 10-year-old interested in gaming:
-
-```
-"🌟 Alex's Money Adventure 🌟
-
-Hi Alex! Today, let's learn about saving money with a fun story!
-
-Imagine Alex wants to save money for a gaming tournament prize pool.
-
-💡 The Challenge:
-You have $10. Your goal is to save enough money in 3 months to buy something special for $30.
-
-📖 The Story:
-Every week, Alex does chores and earns $5. Instead of spending it all on snacks, 
-Alex decides to put the money in a special jar.
-
-Week 1: $5 saved
-Week 2: $10 saved (total)
-Week 3: $15 saved (total)
-Week 4: $20 saved (total) ✨
-
-🎉 Success! Alex reached the goal and bought the gaming tournament tickets!
-"
-```
-
----
-
-## 🔧 Configuration
-
-### Mock Users (for testing)
-Located in `backend/db/mock_users.py`:
-- child_001: Alex, 10 years (gaming, drawing, soccer)
-- child_002: Sam, 12 years (reading, science, music)
-- child_003: Jordan, 8 years (anime, coding, lego)
-- child_004: Casey, 11 years (basketball, art, math)
-
-### Difficulty Thresholds
-```python
-Easy: < 40% average score
-Medium: 40-70% average score
-Hard: > 70% average score
-```
-
-### Points System
-```python
-Quiz Completed: 10 points
-80% Score: +20 bonus
-100% Score: +50 bonus
-Badge Earned: 100 points
-Daily Streak: 50 points
-```
-
----
-
-## 🧠 How Agents Work
-
-### Example: Quiz Generation Flow
-
-```
-1. USER REQUEST
-   └─> /api/quiz/generate (user_id=child_001, topic="saving money")
-
-2. ORCHESTRATOR receives request
-   └─> Generates request_id for tracking
-
-3. DATABASE AGENT
-   └─> Fetches user profile (age 10, hobbies: gaming)
-   └─> Retrieves quiz history (6 previous quizzes, avg 75%)
-
-4. RAG AGENT
-   └─> Searches vector store for "saving money"
-   └─> Retrieves 3 most relevant chunks from knowledge base
-
-5. DIFFICULTY AGENT
-   └─> Analyzes 75% average score
-   └─> Recommends: "medium" difficulty
-
-6. STORY AGENT
-   └─> Takes user profile (10-year-old, gaming fan)
-   └─> Takes topic ("saving money")
-   └─> Takes difficulty ("medium")
-   └─> Generates: Personalized story about saving for gaming prize
-
-7. QUIZ AGENT
-   └─> Generates 5 medium-difficulty questions about saving
-   └─> Includes explanations for learning
-
-8. ORCHESTRATOR logs all steps
-   └─> Saves trace logs for debugging
-
-9. RESPONSE sent to frontend
-   └─> Story + Questions + Metadata
-```
-
----
-
-## 🔄 Answer Submission & Evaluation Flow
-
-```
-1. USER SUBMITS ANSWERS
-   └─> POST /api/submit/answers
-
-2. EVALUATOR AGENT
-   └─> Compares answers to correct answers
-   └─> Calculates score (e.g., 4/5 = 80%)
-   └─> Generates personalized feedback
-
-3. GAMIFICATION AGENT
-   └─> Calculates points (10 + 20 bonus)
-   └─> Checks for badge achievements
-   └─> Determines level progression
-
-4. DATABASE UPDATES
-   └─> Quiz attempt recorded
-   └─> User points updated (+30)
-   └─> Badges added if earned
-   └─> Level updated if threshold reached
-
-5. RESPONSE to frontend
-   └─> Score, feedback, points, badges, level-up status
-   └─> Question-by-question feedback
-```
-
----
-
-## 📊 Trace Logs Example
-
-Access `/api/quiz/trace/{request_id}` to see:
-
-```
-Step 1: Database - Fetching User Profile (completed)
-Step 2: RAGAgent - Retrieving Knowledge Base (completed)
-  └─ Found 3 documents on "saving money"
-Step 3: DifficultyAgent - Analyzing Difficulty (completed)
-  └─ Recommended: medium
-Step 4: StoryAgent - Generating Story (completed)
-  └─ Story length: 450 characters
-Step 5: QuizAgent - Generating Questions (completed)
-  └─ Generated 5 questions
-Step 6: Orchestrator - Quiz Generation Completed (completed)
-  └─ Total steps: 6
-```
-
----
-
-## 🛠️ Development
-
-### Adding a New Agent
-
-1. Create agent in `backend/agents/new_agent.py`:
-```python
-from .base_agent import Agent
-
-class NewAgent(Agent):
-    def __init__(self):
-        super().__init__("NewAgent")
-    
-    def execute(self, **kwargs) -> dict:
-        # Implementation
-        return {"status": "success", ...}
-```
-
-2. Register in `backend/main.py`:
-```python
-orchestrator.register_agent("NewAgent", NewAgent())
-```
-
-3. Use in orchestrator workflows
-
-### Adding a New Quiz Topic
-
-Edit `backend/agents/quiz_agent.py` and add to question banks:
-
-```python
-def _easy_questions(self, topic: str):
-    # Add new topic questions
+# View trace logs
+http://localhost:8000/api/quiz/trace/{request_id}
 ```
 
 ---
 
 ## 🚨 Troubleshooting
 
-### Backend won't start
-- Check port 8000 is available
-- Install all requirements: `pip install -r requirements.txt`
-- Verify Python 3.8+
-
-### Frontend can't connect to backend
-- Ensure backend is running on `localhost:8000`
-- Check CORS is enabled in FastAPI
-- Look for connection errors in browser console
-
-### Database errors
-- Delete `moneytales.db` to reset
-- Run `seed_mock_users()` to recreate test data
-
-### RAG not working
-- Check `data/text/` has files
-- Verify PDF ingestion created sample content
-- Vector store needs at least one document
-
----
-
-## 📈 Future Enhancements
-
-- [ ] Real OpenAI embeddings for better RAG
-- [ ] Add real PDF processing (PyPDF2, pdfplumber)
-- [ ] Authentication & multi-user support
-- [ ] Parent dashboard for monitoring progress
-- [ ] Mobile app version
-- [ ] Multiplayer challenges & team competitions
-- [ ] Community content uploads
-- [ ] AI-generated difficulty on-the-fly
-- [ ] FAISS for production-grade vector search
-- [ ] Caching layer for performance
+| Problem | Solution |
+|---------|----------|
+| Port 8000 in use | `lsof -i :8000` then kill process |
+| No module found | `pip install -r requirements.txt` |
+| Database locked | Delete `moneytales.db` and restart |
+| Frontend won't connect | Ensure backend running on `localhost:8000` |
 
 ---
 
 ## 📝 License
 
-This project is created for educational purposes.
+Educational project - Financial Education Hackathon
 
 ---
 
-## 👥 Team
-
-Built for hackathon: **Financial Education for Kids**
-
----
-
-## 📞 Support
-
-For issues or questions:
-1. Check trace logs at `/api/quiz/trace/{request_id}`
-2. Review API docs at `/docs`
-3. Check backend logs for errors
-
----
-
-**Happy Learning! 🎓💰**
+**🚀 Ready to teach kids about money! Start here and let the agents do the work!**
